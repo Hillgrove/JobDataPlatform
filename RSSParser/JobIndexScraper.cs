@@ -56,13 +56,13 @@ namespace Scrapers
                 ?? jobDoc.DocumentNode
                     .SelectSingleNode("//a[normalize-space(text())='Se jobbet']");
 
-            var externalJobUrl = linkNode?.GetAttributeValue("href", null);
+            var externalJobUrl = linkNode?.GetAttributeValue("href", null!);
 
             Console.WriteLine($"Location: {location}");
             Console.WriteLine($"Internal Job URL: {internalJobUrl}");
             Console.WriteLine($"External Job URL: {externalJobUrl}");
 
-            Console.WriteLine(new string('-', 10));
+            Console.WriteLine($"\n{new string('-', 10)}\n");
         }
 
         private static async Task<SyndicationFeed> GetRssFeedAsync(HttpClient httpClient, int page)
