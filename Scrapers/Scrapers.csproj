@@ -8,6 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\postnumre.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\postnumre.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
     <PackageReference Include="System.ServiceModel.Syndication" Version="9.0.4" />
   </ItemGroup>

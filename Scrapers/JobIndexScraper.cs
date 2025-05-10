@@ -26,7 +26,7 @@ namespace Scrapers
                 foreach (var item in feed.Items)
                 {
                     await ProcessJobItemAsync(HttpClient, item);
-                    await Task.Delay(500);
+                    await Task.Delay(1000);
                     total++;
                 }
 
