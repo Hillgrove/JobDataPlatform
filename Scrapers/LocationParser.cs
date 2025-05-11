@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace Scrapers
 {
-    internal static class LocationResolver
+    internal static class LocationParser
     {
         private static Dictionary<string, List<string>> _cityToPostalList = new(StringComparer.OrdinalIgnoreCase);
         private static HashSet<string> _postalCodes = new();
@@ -27,11 +27,9 @@ namespace Scrapers
 
                 _postalCodes.Add(item.Code);
             }
-
-            Console.WriteLine("Citynames and postal codes loaded into memory...");
         }
 
-        public static string? Resolve(string text)
+        public static string? Extract(string text)
         {
             foreach (var kvp in _cityToPostalList)
             {

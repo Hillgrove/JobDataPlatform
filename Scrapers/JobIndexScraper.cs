@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using System.ServiceModel.Syndication;
+using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace Scrapers
@@ -45,6 +46,8 @@ namespace Scrapers
             var location = summaryDoc.DocumentNode
                 .SelectSingleNode("//*[contains(@class, 'jix_robotjob--area')]")?.InnerText.Trim();
 
+            var resolvedPostalCode = location != null ? LocationParser.Extract(location) : null;
+
             var internalJobUrl = item.Links[0].Uri.ToString();
             var html = await httpClient.GetStringAsync(internalJobUrl);
 
@@ -58,9 +61,18 @@ namespace Scrapers
 
             var externalJobUrl = linkNode?.GetAttributeValue("href", null!);
 
+            var paragraphs = summaryDoc.DocumentNode.SelectNodes("//p");
+            var jobSummaryText = paragraphs != null
+                ? string.Join(" ", paragraphs.Select(p => p.InnerText.Trim()))
+                : string.Empty;
+
+            var programmingLanguages = ProgrammingLanguageParser.Extract(jobSummaryText);
+
+
             Console.WriteLine($"Location: {location}");
             Console.WriteLine($"Internal Job URL: {internalJobUrl}");
             Console.WriteLine($"External Job URL: {externalJobUrl}");
+            Console.WriteLine("TechStack: " + string.Join(", ", programmingLanguages));
 
             Console.WriteLine($"\n{new string('-', 10)}\n");
         }
@@ -71,5 +83,18 @@ namespace Scrapers
             using var stream = await httpClient.GetStreamAsync(url);
             return SyndicationFeed.Load(XmlReader.Create(stream));
         }
+
+        private static string CleanHtml(HtmlDocument doc)
+        {
+            // Fjern script og style nodes
+            doc.DocumentNode.SelectNodes("//script|//style")?.ToList().ForEach(n => n.Remove());
+
+            // Få kun den synlige tekst
+            var rawText = doc.DocumentNode.InnerText;
+
+            // Fjern overflødige whitespaces, linjeskift etc.
+            return Regex.Replace(rawText, @"\s+", " ").Trim();
+        }
     }
 }
+

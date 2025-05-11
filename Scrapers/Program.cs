@@ -1,6 +1,8 @@
 ﻿using Scrapers;
 
 
-//await JobIndexScraper.Run();
+LocationParser.Load("data/postnumre.json");
+ProgrammingLanguageParser.Load("data/programming_languages.json");
 
-LocationResolver.Load("data/postnumre.json");
+//await JobIndexScraper.Run();
+SerpApiScraperV2.Run();   
