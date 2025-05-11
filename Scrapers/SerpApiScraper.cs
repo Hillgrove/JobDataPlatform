@@ -7,7 +7,7 @@ namespace Scrapers
 {
     internal class SerpApiScraper
     {
-        private const string ApiKey = "b10dfef248c986635836cb66e220ec8d6d44dc2f05da64d0dbb8aac534e95d89";
+        private const string ApiKey = "";
         private static readonly string BaseQuery = Uri.EscapeDataString("udvikler OR software OR programmering OR developer OR programmør OR database OR Devops");
         private static readonly string BaseUrl = $"https://serpapi.com/search.json?engine=google_jobs&q={BaseQuery}&location=Denmark&google_domain=google.dk&gl=dk&hl=da&api_key={ApiKey}";
 

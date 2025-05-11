@@ -6,7 +6,7 @@ namespace Scrapers
 {
     internal class SerpApiScraperV2
     {
-        private const string ApiKey = "b10dfef248c986635836cb66e220ec8d6d44dc2f05da64d0dbb8aac534e95d89";
+        private const string ApiKey = "";
 
         public static void Run()
         {
