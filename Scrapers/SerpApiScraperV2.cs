@@ -8,13 +8,13 @@ namespace Scrapers
     {
         private const string ApiKey = "";
 
-        public static void Run()
+        public static async Task Run()
         {
             var parameters = new Hashtable
             {
                 { "engine", "google_jobs" },
                 { "google_domain", "google.dk" },
-                { "q", "udvikler OR software OR programmering OR developer OR programmør OR database OR Devops" },
+                { "q", "udvikler OR developer OR softwareudvikler OR programmør OR fullstack OR frontend OR backend OR webudvikler OR appudvikler OR \"it konsulent\" OR \"software engineer\" OR database OR software" },
                 { "hl", "da" },
                 { "gl", "dk" },
                 { "location", "Denmark" }
