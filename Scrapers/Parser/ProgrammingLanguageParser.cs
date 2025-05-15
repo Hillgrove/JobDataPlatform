@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Scrapers
+namespace Scrapers.Parser
 {
     internal class ProgrammingLanguageParser
     {

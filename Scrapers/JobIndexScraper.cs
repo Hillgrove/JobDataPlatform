@@ -1,20 +1,30 @@
 ﻿using HtmlAgilityPack;
 using System.ServiceModel.Syndication;
-using System.Text.RegularExpressions;
+using System.Text.Json;
 using System.Xml;
 
 namespace Scrapers
 {
     internal static class JobIndexScraper
     {
-        private const string RssBaseUrl = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1";
-        private const string PageQueryParam = "page=";
-        private const int ResultsPerPage = 20;
+        private const string RssUrl             = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1";
+        private const string PageQueryParam     = "page=";
+
+        private const string OutputDir          = "data/raw";
+        private const string PageDir            = $"{OutputDir}/jobindexPages";
+
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+
 
         internal static async Task Run()
         {
-            using HttpClient HttpClient = new HttpClient();
-            HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
+            Directory.CreateDirectory(OutputDir);
+            Directory.CreateDirectory(PageDir);
+
+            var allJobs = new List<object>();
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
                 "HojlundScraper/1.0 - Efter aftale med Daniel Egeberg (kontakt: jesper@hillgrove.dk)");
 
             int page = 1;
@@ -22,78 +32,94 @@ namespace Scrapers
             bool isDone = false;
             while (!isDone)
             {
-                var feed = await GetRssFeedAsync(HttpClient, page++);
-                
+                Console.WriteLine($"[Side {page}] Henter data..");
+
+                var feed = await LoadRssAsync(httpClient, page++);
                 foreach (var item in feed.Items)
                 {
-                    await ProcessJobItemAsync(HttpClient, item);
-                    await Task.Delay(1000);
+                    var job = await ProcessJobItemAsync(httpClient, item);
+                    if (job != null)
+                    {
+                        allJobs!.Add(job);
+                    }
+
                     total++;
+                    await Task.Delay(500);
                 }
 
-                isDone = feed.Items.Count() < ResultsPerPage;
-                await Task.Delay(1000); // delay to avoid overwhelming the server
+                Console.WriteLine($"Fundet {allJobs?.Count ?? 0} jobs");
+                //isDone = !feed.Items.Any();
+                isDone = true;
+                await Task.Delay(500);
             }
 
-            Console.WriteLine($"Total items processed: {total}");
+            var filename    = $"jobindex_results_{DateTime.Now:yyyy-MM-dd}.json";
+            var path        = Path.Combine(OutputDir, filename);
+            File.WriteAllText(path, JsonSerializer.Serialize(allJobs, JsonSerializerOptions));
+            Console.WriteLine($"Gemte {allJobs?.Count ?? 0} jobopslag i {path}");
         }
 
-        private static async Task ProcessJobItemAsync(HttpClient httpClient, SyndicationItem item)
+        private static async Task<SyndicationFeed> LoadRssAsync(HttpClient httpClient, int page)
         {
-            var summaryDoc = new HtmlDocument();
-            summaryDoc.LoadHtml(item.Summary.Text);
-
-            var location = summaryDoc.DocumentNode
-                .SelectSingleNode("//*[contains(@class, 'jix_robotjob--area')]")?.InnerText.Trim();
-
-            var resolvedPostalCode = location != null ? LocationParser.Extract(location) : null;
-
-            var internalJobUrl = item.Links[0].Uri.ToString();
-            var html = await httpClient.GetStringAsync(internalJobUrl);
-
-            var jobDoc = new HtmlDocument();
-            jobDoc.LoadHtml(html);
-
-            var linkNode = jobDoc.DocumentNode
-                .SelectSingleNode("//a[contains(@class, 'seejobdesktop') or contains(@class, 'seejobmobil')]")
-                ?? jobDoc.DocumentNode
-                    .SelectSingleNode("//a[normalize-space(text())='Se jobbet']");
-
-            var externalJobUrl = linkNode?.GetAttributeValue("href", null!);
-
-            var paragraphs = summaryDoc.DocumentNode.SelectNodes("//p");
-            var jobSummaryText = paragraphs != null
-                ? string.Join(" ", paragraphs.Select(p => p.InnerText.Trim()))
-                : string.Empty;
-
-            var programmingLanguages = ProgrammingLanguageParser.Extract(jobSummaryText);
-
-
-            Console.WriteLine($"Location: {location}");
-            Console.WriteLine($"Internal Job URL: {internalJobUrl}");
-            Console.WriteLine($"External Job URL: {externalJobUrl}");
-            Console.WriteLine("TechStack: " + string.Join(", ", programmingLanguages));
-
-            Console.WriteLine($"\n{new string('-', 10)}\n");
-        }
-
-        private static async Task<SyndicationFeed> GetRssFeedAsync(HttpClient httpClient, int page)
-        {
-            var url = $"{RssBaseUrl}&{PageQueryParam}{page}";
+            var url = $"{RssUrl}&{PageQueryParam}{page}";
             using var stream = await httpClient.GetStreamAsync(url);
             return SyndicationFeed.Load(XmlReader.Create(stream));
         }
 
-        private static string CleanHtml(HtmlDocument doc)
+        private static async Task<object?> ProcessJobItemAsync(HttpClient httpClient, SyndicationItem item)
         {
-            // Fjern script og style nodes
-            doc.DocumentNode.SelectNodes("//script|//style")?.ToList().ForEach(n => n.Remove());
+            try
+            {
+                var summaryUrl = item.Links[0].Uri.ToString();
+                var summaryHtml = await httpClient.GetStringAsync(summaryUrl);
 
-            // Få kun den synlige tekst
-            var rawText = doc.DocumentNode.InnerText;
+                var doc = new HtmlDocument();
+                doc.LoadHtml(summaryHtml);
 
-            // Fjern overflødige whitespaces, linjeskift etc.
-            return Regex.Replace(rawText, @"\s+", " ").Trim();
+                var seeJobLinkNode = doc.DocumentNode.SelectSingleNode("//a[contains(@class,'seejobdesktop') or contains(@class,'seejobmobil')]") 
+                    ?? doc.DocumentNode.SelectSingleNode("//a[normalize-space(text())='Se jobbet']");
+                var seeJobUrl = seeJobLinkNode?.GetAttributeValue("href", string.Empty);
+                var isJobDescriptionOnJobindex = seeJobUrl?.Contains("jobindex.dk") ?? false;
+
+                string? fullDescriptionHtml = null;
+                
+                if (isJobDescriptionOnJobindex)
+                {
+                    fullDescriptionHtml = await httpClient.GetStringAsync(seeJobUrl);
+
+                    if (!string.IsNullOrEmpty(seeJobUrl))
+                    {
+                        var hash = HashUrl(seeJobUrl);
+                        var filePath = Path.Combine(PageDir, $"{hash}.html");
+                        File.WriteAllText(filePath, fullDescriptionHtml); 
+                    }
+                }
+
+                return new
+                {
+                    id = item.Id,
+                    titel = item.Title.Text,
+                    shortDescriptionHtml = item.Summary.Text,
+                    fullDescriptionHtml,
+                    summaryUrl,
+                    seeJobUrl,
+                    isJobDescriptionOnJobindex,
+                    scrapedAt = DateTime.UtcNow.ToString("O"),
+                    source = "jobindex.dk",
+                };
+            }
+
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fejl ved behandling af job: {ex.Message}");
+                return null;
+            }
+        }
+
+        private static object HashUrl(string url)
+        {
+            var hash = System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(url));
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant()[..12];
         }
     }
 }

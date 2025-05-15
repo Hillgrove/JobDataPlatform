@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
-namespace Scrapers
+namespace Scrapers.Parser
 {
     internal static class LocationParser
     {
@@ -24,6 +24,16 @@ namespace Scrapers
                 }
 
                 _cityToPostalList[city].Add(item.Code);
+
+                // Ekstra: Tilføj kommune-navn som alternativ nøgle
+                if (item.Municipalities?.Count > 0)
+                {
+                    var kommuneNavn = item.Municipalities[0].Name.Trim();
+                    if (!_cityToPostalList.ContainsKey(kommuneNavn))
+                        _cityToPostalList[kommuneNavn] = new List<string>();
+
+                    _cityToPostalList[kommuneNavn].Add(item.Code);
+                }
 
                 _postalCodes.Add(item.Code);
             }
@@ -55,6 +65,15 @@ namespace Scrapers
         [JsonPropertyName("nr")]
         public string Code { get; set; } = string.Empty;
 
+        [JsonPropertyName("navn")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("kommuner")]
+        public List<MunicipalityRecord>? Municipalities { get; set; }
+    }
+
+    internal class MunicipalityRecord
+    {
         [JsonPropertyName("navn")]
         public string Name { get; set; } = string.Empty;
     }
