@@ -3,9 +3,9 @@ using System.ServiceModel.Syndication;
 using System.Text.Json;
 using System.Xml;
 
-namespace Scrapers.Extractors
+namespace Extract
 {
-    internal static class Jobindex
+    public static class Jobindex
     {
         private const string RssUrl             = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1";
         private const string PageQueryParam     = "page=";
@@ -16,7 +16,7 @@ namespace Scrapers.Extractors
         private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
 
-        internal static async Task Run()
+        public static async Task Extract()
         {
             Directory.CreateDirectory(OutputDir);
             Directory.CreateDirectory(PageDir);

@@ -3,13 +3,13 @@ using Azure.Security.KeyVault.Secrets;
 using Newtonsoft.Json.Linq;
 using System.Net;
 
-namespace Scrapers.Extractors
+namespace Extract
 {
-    internal class SerpApi
+    public static class SerpApi
     {
         private static string? _apiKey;
 
-        public static async Task Run(string searchQuery)
+        public static async Task Extract(string searchQuery)
         {
             var apiKey = await GetApiKeyFromVault();
 
