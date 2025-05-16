@@ -3,9 +3,9 @@ using System.ServiceModel.Syndication;
 using System.Text.Json;
 using System.Xml;
 
-namespace Scrapers
+namespace Scrapers.Extractors
 {
-    internal static class JobIndexScraper
+    internal static class Jobindex
     {
         private const string RssUrl             = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1";
         private const string PageQueryParam     = "page=";

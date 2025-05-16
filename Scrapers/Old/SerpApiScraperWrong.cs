@@ -4,7 +4,7 @@ using System.Net;
 using System.Text.Json;
 
 
-namespace Scrapers
+namespace Scrapers.Old
 {
     internal class SerpApiScraperWrong
     {
@@ -46,8 +46,8 @@ namespace Scrapers
                             string? scheduleType                = job["detected_extensions"]?["schedule_type"]?.ToString();
                             string? description                 = job["description"]?.ToString();
 
-                            string? postalCode                  = locationRaw != null ? LocationParser.Extract(locationRaw) : null;
-                            List<string>? programmingLanguages  = description != null ? ProgrammingLanguageParser.Extract(description) : null;
+                            string? postalCode                  = locationRaw != null ? Location.Extract(locationRaw) : null;
+                            List<string>? programmingLanguages  = description != null ? ProgrammingLanguage.Extract(description) : null;
 
                             allJobs.Add(new JobEntry
                             {

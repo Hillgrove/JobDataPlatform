@@ -3,9 +3,9 @@ using Azure.Security.KeyVault.Secrets;
 using Newtonsoft.Json.Linq;
 using System.Net;
 
-namespace Scrapers
+namespace Scrapers.Extractors
 {
-    internal class RawDataExtractor_SerpAPI
+    internal class SerpApi
     {
         private static string? _apiKey;
 

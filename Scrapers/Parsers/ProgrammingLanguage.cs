@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Scrapers.Parser
 {
-    internal class ProgrammingLanguageParser
+    internal class ProgrammingLanguage
     {
         private static readonly List<string> _languages = new();
 

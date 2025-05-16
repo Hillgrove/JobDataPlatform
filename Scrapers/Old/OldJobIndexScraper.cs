@@ -4,7 +4,7 @@ using System.ServiceModel.Syndication;
 using System.Text.RegularExpressions;
 using System.Xml;
 
-namespace Scrapers
+namespace Scrapers.Old
 {
     internal static class OldJobIndexScraper
     {
@@ -47,7 +47,7 @@ namespace Scrapers
             var location = summaryDoc.DocumentNode
                 .SelectSingleNode("//*[contains(@class, 'jix_robotjob--area')]")?.InnerText.Trim();
 
-            var resolvedPostalCode = location != null ? LocationParser.Extract(location) : null;
+            var resolvedPostalCode = location != null ? Location.Extract(location) : null;
 
             var internalJobUrl = item.Links[0].Uri.ToString();
             var html = await httpClient.GetStringAsync(internalJobUrl);
@@ -67,7 +67,7 @@ namespace Scrapers
                 ? string.Join(" ", paragraphs.Select(p => p.InnerText.Trim()))
                 : string.Empty;
 
-            var programmingLanguages = ProgrammingLanguageParser.Extract(jobSummaryText);
+            var programmingLanguages = ProgrammingLanguage.Extract(jobSummaryText);
 
 
             Console.WriteLine($"Location: {location}");

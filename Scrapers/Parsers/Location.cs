@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace Scrapers.Parser
 {
-    internal static class LocationParser
+    internal static class Location
     {
         private static Dictionary<string, List<string>> _cityToPostalList = new(StringComparer.OrdinalIgnoreCase);
         private static HashSet<string> _postalCodes = new();
