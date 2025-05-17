@@ -6,8 +6,14 @@ namespace Load
     {
         public static async Task UploadAllFilesAsync(string localFolder, string bucketName, string gcsFolder = "")
         {
-            var keyPath = Path.Combine(AppContext.BaseDirectory, "secrets", "gcs-key.json");
-            var client = await StorageClient.CreateAsync(Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(keyPath));
+            //var keyPath = Path.Combine(AppContext.BaseDirectory, "secrets", "gcs-key.json");
+            var keyPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Load", "Secrets", "gcs-key.json");
+            if (!File.Exists(keyPath))
+                throw new FileNotFoundException($"Filen '{keyPath}' blev ikke fundet. Sørg for at placere nøglen korrekt.");
+
+            var credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(keyPath);
+            var client = await StorageClient.CreateAsync(credential);
+            
             var files = Directory.GetFiles(localFolder, "*.*", SearchOption.AllDirectories);
 
             var uploadTasks = files.Select(async file =>
