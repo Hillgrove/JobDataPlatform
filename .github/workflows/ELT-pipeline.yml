@@ -23,8 +23,8 @@ jobs:
 
       - name: Opret secrets-mappe og gem GCS nøgle
         run: |
-          mkdir -p CLI/secrets
-          echo "${{ secrets.GCP_SA_KEY }}" > CLI/secrets/gcs-key.json
+          mkdir -p Load/secrets
+          echo "${{ secrets.GCP_SA_KEY }}" > Load/secrets/gcs-key.json
 
       - name: Kør pipeline
         run: dotnet run --project CLI/CLI.csproj
