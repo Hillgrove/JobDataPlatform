@@ -20,8 +20,8 @@ jobs:
 
       - name: Opret secrets-mappe og gem GCS nøgle
         run: |
-          mkdir -p Load/Secrets
-          echo "${{ secrets.GCP_SA_KEY }}" > Load/Secrets/gcs-key.json
+          mkdir -p CLI/bin/Debug/net8.0/secrets
+          echo "${{ secrets.GCP_SA_KEY }}" > CLI/bin/Debug/net8.0/secrets/gcs-key.json
 
       - name: Restore afhængigheder
         run: dotnet restore CLI/CLI.csproj
