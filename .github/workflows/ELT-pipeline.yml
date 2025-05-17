@@ -8,7 +8,7 @@ on:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Check kode ud
         uses: actions/checkout@v3
@@ -39,12 +39,10 @@ jobs:
       #     mkdir -p CLI/bin/Debug/net8.0/secrets
       #     echo "${{ secrets.GCP_SA_KEY }}" > CLI/bin/Debug/net8.0/secrets/gcs-key.json
 
-      - name: Gem gcs-key.json i CLI/bin/Debug/net8.0/secrets
+      - name: Læg gcs-key.json i Load/Secrets (krævet af runtime)
         run: |
-          mkdir -p CLI/bin/Debug/net8.0/secrets
-          echo "${{ secrets.GCP_SA_KEY }}" > CLI/bin/Debug/net8.0/secrets/gcs-key.json
-
-
+          mkdir -p Load/Secrets
+          echo "${{ secrets.GCP_SA_KEY }}" > Load/Secrets/gcs-key.json
       
       - name: Restore afhængigheder
         run: dotnet restore CLI/CLI.csproj
