@@ -7,7 +7,7 @@ namespace Extract
 {
     public static class Jobindex
     {
-        private const string RssUrl             = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1";
+        private const string RssUrl             = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1&&jobage=1";
         private const string PageQueryParam     = "page=";
 
         private const string OutputDir          = "data/raw";
@@ -48,8 +48,8 @@ namespace Extract
                 }
 
                 Console.WriteLine($"Fundet {allJobs?.Count ?? 0} jobs");
-                //isDone = !feed.Items.Any();
-                isDone = true;
+                isDone = !feed.Items.Any();
+                //isDone = true; // to only get the first page
                 await Task.Delay(500);
             }
 

@@ -8,19 +8,27 @@ namespace Extract
     public static class SerpApi
     {
         private static string? _apiKey;
+        private static readonly HttpClient client = new();
 
         public static async Task Extract(string searchQuery)
         {
-            var apiKey = await GetApiKeyFromVault();
+            var allJobs             = new JArray();
+            
+            var serpApiUrl          = "https://serpapi.com/search.json";
+            var apiKey              = await GetApiKeyFromVault();
+            var queryParams         = GetBaseQueryParams(searchQuery, apiKey);
+            var QueryString         = BuildQueryString(queryParams);
+            var baseUrl             = $"{serpApiUrl}?{QueryString}";
 
-            var encodedQuery = WebUtility.UrlEncode(searchQuery);
-            var baseUrl = $"https://serpapi.com/search.json?engine=google_jobs&q={encodedQuery}&location=Denmark&google_domain=google.dk&gl=dk&hl=da&api_key={apiKey}";
+            var urlForYesterday     = await GetUrlForYesterday(client, baseUrl);
+            if (urlForYesterday is null)
+            {
+                Console.WriteLine("Kunne ikke finde 'i går'-filret via SerpApi.");
+                return;
+            }
+            var nextUrl             = urlForYesterday;
 
-            using var client = new HttpClient();
-            var allJobs = new JArray();
-            string? nextUrl = $"{baseUrl}&api_key={apiKey}";
             int page = 1;
-
             while (!string.IsNullOrEmpty(nextUrl))
             {
                 try
@@ -75,6 +83,43 @@ namespace Extract
 
             _apiKey = secret.Value.Value;
             return _apiKey;
+        }
+
+        private static async Task<string?> GetUrlForYesterday(HttpClient client, string url)
+        {            
+            var response = await client.GetStringAsync(url);
+            var json = JObject.Parse(response);
+
+            if (json["filters"] is not JArray filters) return null;
+
+            var dateFilter = filters.FirstOrDefault(f => f["name"]?.ToString() == "Opslagsdato");
+            if (dateFilter is null) return null;
+
+            var yesterdayOption = dateFilter["options"]?
+                .FirstOrDefault(o => o["name"]?.ToString()?.Contains("i går", StringComparison.OrdinalIgnoreCase) == true);
+
+            var urlForYesterday = yesterdayOption?["serpapi_link"]?.ToString();
+            return urlForYesterday;
+        }
+
+        private static Dictionary<string, string> GetBaseQueryParams(string searchQuery, string apiKey)
+        {
+            return new Dictionary<string, string>
+            {
+                { "engine", "google_jobs" },
+                { "q", searchQuery },
+                { "location", "Denmark" },
+                { "google_domain", "google.dk" },
+                { "gl", "dk" },
+                { "hl", "da" },
+                { "api_key", apiKey }
+            };
+        }
+
+        private static string BuildQueryString(Dictionary<string, string> parameters)
+        {
+            return string.Join("&", parameters.Select(kvp =>
+                $"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(kvp.Value)}"));
         }
     }
 }
