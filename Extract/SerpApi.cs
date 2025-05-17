@@ -15,7 +15,7 @@ namespace Extract
             var allJobs             = new JArray();
             
             var serpApiUrl          = "https://serpapi.com/search.json";
-            var apiKey              = await GetApiKeyFromVault();
+            var apiKey              = GetApiKeyFromEnvironment();
             var queryParams         = GetBaseQueryParams(searchQuery, apiKey);
             var QueryString         = BuildQueryString(queryParams);
             var baseUrl             = $"{serpApiUrl}?{QueryString}";
@@ -82,6 +82,20 @@ namespace Extract
             var secret = await client.GetSecretAsync(secretName);
 
             _apiKey = secret.Value.Value;
+            return _apiKey;
+        }
+
+        private static string GetApiKeyFromEnvironment()
+        {
+            if (_apiKey != null) return _apiKey;
+
+            _apiKey = Environment.GetEnvironmentVariable("SERP_API_KEY");
+
+            if (string.IsNullOrEmpty(_apiKey))
+            {
+                throw new InvalidOperationException("API key not found in environment variables.");
+            }
+
             return _apiKey;
         }
 
