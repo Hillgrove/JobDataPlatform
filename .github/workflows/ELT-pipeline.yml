@@ -18,10 +18,26 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Opret secrets-mappe og gem GCS nøgle
+      - name: Opret secrets-mappe og gem GCS nøgle + DEBUG
         run: |
+          echo ">> Opretter secrets-mappe og skriver gcs-key.json..."
           mkdir -p CLI/bin/Debug/net8.0/secrets
           echo "${{ secrets.GCP_SA_KEY }}" > CLI/bin/Debug/net8.0/secrets/gcs-key.json
+
+          echo ">> DEBUG: Finder alle bin/Debug/net8.0 foldere:"
+          find . -type d -path "*/bin/Debug/net8.0" | sort
+
+          echo ">> DEBUG: Leder efter gcs-key.json i hele projektet:"
+          find . -name "gcs-key.json" -exec ls -l {} \;
+
+          echo ">> DEBUG: Udskriver sti og indhold af gcs-key.json:"
+          find . -name "gcs-key.json" -exec sh -c 'echo "--- {} ---"; cat "{}"; echo' \;
+
+
+      # - name: Opret secrets-mappe og gem GCS nøgle
+      #   run: |
+      #     mkdir -p CLI/bin/Debug/net8.0/secrets
+      #     echo "${{ secrets.GCP_SA_KEY }}" > CLI/bin/Debug/net8.0/secrets/gcs-key.json
 
       - name: Restore afhængigheder
         run: dotnet restore CLI/CLI.csproj
