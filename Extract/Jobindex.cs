@@ -7,11 +7,10 @@ namespace Extract
 {
     public static class Jobindex
     {
-        private const string RssUrl             = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1&&jobage=1";
+        private const string RssUrl             = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1&jobage=1";
         private const string PageQueryParam     = "page=";
 
         private const string OutputDir          = "data/raw";
-        private const string PageDir            = $"{OutputDir}/jobindexPages";
 
         private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
@@ -19,7 +18,6 @@ namespace Extract
         public static async Task Extract()
         {
             Directory.CreateDirectory(OutputDir);
-            Directory.CreateDirectory(PageDir);
 
             var allJobs = new List<object>();
 
@@ -85,14 +83,20 @@ namespace Extract
                 
                 if (isJobDescriptionOnJobindex)
                 {
-                    fullDescriptionHtml = await httpClient.GetStringAsync(seeJobUrl);
+                    var fullHtml = await httpClient.GetStringAsync(seeJobUrl);
+                    var fullDoc = new HtmlDocument();
+                    fullDoc.LoadHtml(fullHtml);
 
-                    if (!string.IsNullOrEmpty(seeJobUrl))
-                    {
-                        var hash = HashUrl(seeJobUrl);
-                        var filePath = Path.Combine(PageDir, $"{hash}.html");
-                        File.WriteAllText(filePath, fullDescriptionHtml); 
-                    }
+                    var articleNode = fullDoc.DocumentNode.SelectSingleNode("//article[contains(@class,'jobtext-jobad')]");
+                    fullDescriptionHtml = articleNode?.OuterHtml;
+
+                    // Saves the full job description to a file
+                    //if (!string.IsNullOrEmpty(seeJobUrl))
+                    //{
+                    //    var hash = HashUrl(seeJobUrl);
+                    //    var filePath = Path.Combine(PageDir, $"{hash}.html");
+                    //    File.WriteAllText(filePath, fullDescriptionHtml); 
+                    //}
                 }
 
                 return new

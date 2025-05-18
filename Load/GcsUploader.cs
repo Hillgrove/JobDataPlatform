@@ -6,7 +6,6 @@ namespace Load
     {
         public static async Task UploadAllFilesAsync(string localFolder, string bucketName, string gcsFolder = "")
         {
-            //var keyPath = Path.Combine(AppContext.BaseDirectory, "secrets", "gcs-key.json");
             var keyPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Load", "Secrets", "gcs-key.json");
             if (!File.Exists(keyPath))
                 throw new FileNotFoundException($"Filen '{keyPath}' blev ikke fundet. Sørg for at placere nøglen korrekt.");
