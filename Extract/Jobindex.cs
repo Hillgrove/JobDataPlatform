@@ -3,34 +3,40 @@ using System.ServiceModel.Syndication;
 using System.Text.Json;
 using System.Xml;
 
+
 namespace Extract
 {
     public static class Jobindex
     {
         private const string RssUrl             = "https://www.jobindex.dk/jobsoegning.rss?geoareaid=1221&subid=1&jobage=1";
         private const string PageQueryParam     = "page=";
-
         private const string OutputDir          = "data/raw";
+        private static readonly HttpClient httpClient;
 
-        private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
-
+        static Jobindex()
+        {
+            httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
+                "HojlundScraper/1.0 - Efter aftale med Daniel Egeberg (kontakt: jesper@hillgrove.dk)");
+        }
 
         public static async Task Extract()
         {
-            Directory.CreateDirectory(OutputDir);
-
+            var allJobs = await ScrapeJobs();
+            await WriteJobsToJson(allJobs);
+        }
+        private static async Task<List<object>?> ScrapeJobs()
+        {
+            Console.WriteLine("Scraper Jobindex:");
+            
             var allJobs = new List<object>();
-
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
-                "HojlundScraper/1.0 - Efter aftale med Daniel Egeberg (kontakt: jesper@hillgrove.dk)");
-
             int page = 1;
             int total = 0;
             bool isDone = false;
+
             while (!isDone)
             {
-                Console.WriteLine($"[Side {page}] Henter data..");
+                Console.WriteLine($" [Side {page}] Henter data..");
 
                 var feed = await LoadRssAsync(httpClient, page++);
                 foreach (var item in feed.Items)
@@ -45,15 +51,36 @@ namespace Extract
                     await Task.Delay(500);
                 }
 
-                Console.WriteLine($"Fundet {allJobs?.Count ?? 0} jobs");
+                Console.WriteLine($"  Fundet {allJobs?.Count ?? 0} jobs");
                 isDone = !feed.Items.Any();
-                //isDone = true; // to only get the first page
+
                 await Task.Delay(500);
             }
 
-            var filename    = $"jobindex_results_{DateTime.Now:yyyy-MM-dd}.json";
-            var path        = Path.Combine(OutputDir, filename);
-            File.WriteAllText(path, JsonSerializer.Serialize(allJobs, JsonSerializerOptions));
+            Console.WriteLine($" Gennemførte {page - 1} side(r) med {allJobs?.Count} jobopslag.");
+            return allJobs;
+        }
+
+        private static async Task WriteJobsToJson(List<object>? allJobs)
+        {            
+            if (allJobs == null || allJobs.Count == 0)
+            {
+                Console.WriteLine("Ingen jobopslag gemt.\n");
+                return;
+            }
+
+            Directory.CreateDirectory(OutputDir);
+            var filename = $"jobindex_results_{DateTime.Now:yyyy-MM-dd}.ndjson";
+            var path = Path.Combine(OutputDir, filename);
+
+            await using var writer = File.CreateText(path);
+            
+            foreach (var job in allJobs)
+            {
+                var line = JsonSerializer.Serialize(job);
+                await writer.WriteLineAsync(line);
+            }
+
             Console.WriteLine($"Gemte {allJobs?.Count ?? 0} jobopslag i {path}");
         }
 

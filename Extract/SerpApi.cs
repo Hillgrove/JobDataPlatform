@@ -8,69 +8,56 @@ namespace Extract
     public static class SerpApi
     {
         private static string? _apiKey;
+        private const string OutputDir = "data/raw";
         private static readonly HttpClient client = new();
 
         public static async Task Extract(string searchQuery)
         {
-            var allJobs             = new JArray();
-            
-            var serpApiUrl          = "https://serpapi.com/search.json";
-            var apiKey              = GetApiKeyFromEnvironment();
-            var queryParams         = GetBaseQueryParams(searchQuery, apiKey);
-            var QueryString         = BuildQueryString(queryParams);
-            var baseUrl             = $"{serpApiUrl}?{QueryString}";
-
-            var urlForYesterday     = await GetUrlForYesterday(client, baseUrl);
-            if (urlForYesterday is null)
-            {
-                Console.WriteLine("Kunne ikke finde 'i går'-filret via SerpApi.");
-                return;
-            }
-            var nextUrl             = urlForYesterday;
-
-            int page = 1;
-            while (!string.IsNullOrEmpty(nextUrl))
-            {
-                try
-                {
-                    Console.WriteLine($"[Side {page++}] Henter data..");
-
-                    if (!nextUrl.Contains("api_key="))
-                        nextUrl += $"&api_key={apiKey}";
-
-                    var response = await client.GetStringAsync(nextUrl);
-                    var json = JObject.Parse(response);
-
-                    if (json["jobs_results"] is JArray jobs)
-                    {
-                        allJobs.Merge(jobs);
-                        Console.WriteLine($"Fundet {jobs?.Count ?? 0} jobs");
-                    }
-
-                    nextUrl = json["serpapi_pagination"]?["next"]?.ToString();
-                    await Task.Delay(1000); // Delay to avoid hitting the rate limit
-                }
-                
-                catch (HttpRequestException httpEx)
-                {
-                    Console.WriteLine($"HTTP Fejl: {httpEx.Message}");
-                    break;
-                }
-                
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Fejl: {ex.Message}");
-                    break;
-                }
-            }
-
-            Directory.CreateDirectory("data/raw");
-            var filename = $"data/raw/serpapi_results_{DateTime.Now:yyyy-MM-dd}.json";
-            File.WriteAllText(filename, allJobs.ToString());
-            Console.WriteLine($"Gemte {allJobs.Count} jobopslag i {filename}");
+            var allJobs = await ScrapeJobs(searchQuery);
+            await WriteJobsToJson(allJobs);
         }
 
+        private static async Task<IEnumerable<object>> ScrapeJobs(string searchQuery)
+        {
+            Console.WriteLine("Scraper SerpApi:");
+            
+            var apiKey = await GetApiKeyFromVault();
+            var baseUrl = BuildBaseUrl(searchQuery, apiKey);
 
+            var urlForYesterday = await GetUrlForYesterday(baseUrl);
+            if (urlForYesterday is null)
+            {
+                Console.WriteLine(" Kunne ikke finde 'i går'-filtret via SerpApi.");
+                return Enumerable.Empty<object>();
+            }
+
+            var allJobs = await FetchJobPages(urlForYesterday, apiKey);
+            return allJobs.Select(job => (object)job).ToList();
+        }
+
+        private static async Task WriteJobsToJson(IEnumerable<object> allJobs)
+        {
+            if (allJobs is null || !allJobs.Any())
+            {
+                Console.WriteLine("Ingen jobopslag gemt.");
+                return;
+            }
+
+            Directory.CreateDirectory(OutputDir);
+            var filename = $"serpapi_results_{DateTime.Now:yyyy-MM-dd}.ndjson";
+            var path = Path.Combine(OutputDir, filename);
+
+            await using var writer = File.CreateText(path);
+
+            foreach (var job in allJobs)
+            {
+                var serializedJob = Newtonsoft.Json.JsonConvert.SerializeObject(job, Newtonsoft.Json.Formatting.None);
+                await writer.WriteLineAsync(serializedJob);
+            }
+
+            Console.WriteLine($"Gemte {allJobs.Count()} jobopslag i {path}");
+        }
+        
         private static async Task<string> GetApiKeyFromVault()
         {
             if (_apiKey != null) return _apiKey;
@@ -84,22 +71,17 @@ namespace Extract
             _apiKey = secret.Value.Value;
             return _apiKey;
         }
-
-        private static string GetApiKeyFromEnvironment()
+        
+        private static string BuildBaseUrl(string searchQuery, string apiKey)
         {
-            if (_apiKey != null) return _apiKey;
+            var serpApiUrl = "https://serpapi.com/search.json";
+            var queryParams = GetBaseQueryParams(searchQuery, apiKey);
+            var queryString = BuildQueryString(queryParams);
 
-            _apiKey = Environment.GetEnvironmentVariable("SERP_API_KEY");
-
-            if (string.IsNullOrEmpty(_apiKey))
-            {
-                throw new InvalidOperationException("API key not found in environment variables.");
-            }
-
-            return _apiKey;
+            return $"{serpApiUrl}?{queryString}";
         }
 
-        private static async Task<string?> GetUrlForYesterday(HttpClient client, string url)
+        private static async Task<string?> GetUrlForYesterday(string url)
         {            
             var response = await client.GetStringAsync(url);
             var json = JObject.Parse(response);
@@ -114,6 +96,72 @@ namespace Extract
 
             var urlForYesterday = yesterdayOption?["serpapi_link"]?.ToString();
             return urlForYesterday;
+        }
+
+        private static async Task<JArray> FetchJobPages(string startUrl, string apiKey)
+        {
+            var allJobs = new JArray();
+            var nextUrl = startUrl;
+            int page = 1;
+
+            while (!string.IsNullOrEmpty(nextUrl))
+            {
+                try
+                {
+                    Console.WriteLine($" [Side {page++}] Henter data..");
+
+                    if (!nextUrl.Contains("api_key="))
+                        nextUrl += $"&api_key={apiKey}";
+
+                    var response = await client.GetStringAsync(nextUrl);
+                    var jobs = ParseJobsFromResponse(response);
+
+                    if (jobs != null)
+                    {
+                        allJobs.Merge(jobs);
+                        Console.WriteLine($"  Fundet {jobs.Count} jobs");
+                    }
+
+                    var json = JObject.Parse(response);
+                    nextUrl = json["serpapi_pagination"]?["next"]?.ToString();
+
+                    await Task.Delay(1000); // Delay to avoid hitting the rate limit
+
+                }
+
+                catch (HttpRequestException httpEx)
+                {
+                    Console.WriteLine($"HTTP Fejl: {httpEx.Message}");
+                    break;
+                }
+
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Fejl: {ex.Message}");
+                    break;
+                }
+            }
+
+            return allJobs;
+        }
+        
+        private static JArray? ParseJobsFromResponse(string response)
+        {
+            try
+            {
+                var json = JObject.Parse(response);
+                return json["jobs_results"] as JArray;
+            }
+            catch (Newtonsoft.Json.JsonException ex)
+            {
+                Console.WriteLine($" JSON Fejl: {ex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Fejl: {ex.Message}");
+                return null;
+            }
         }
 
         private static Dictionary<string, string> GetBaseQueryParams(string searchQuery, string apiKey)
@@ -134,6 +182,20 @@ namespace Extract
         {
             return string.Join("&", parameters.Select(kvp =>
                 $"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(kvp.Value)}"));
+        }
+
+        private static string GetApiKeyFromEnvironment()
+        {
+            if (_apiKey != null) return _apiKey;
+
+            _apiKey = Environment.GetEnvironmentVariable("SERP_API_KEY");
+
+            if (string.IsNullOrEmpty(_apiKey))
+            {
+                throw new InvalidOperationException("API key not found in environment variables.");
+            }
+
+            return _apiKey;
         }
     }
 }
