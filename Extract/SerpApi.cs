@@ -20,8 +20,8 @@ namespace Extract
         private static async Task<IEnumerable<object>> ScrapeJobs(string searchQuery)
         {
             Console.WriteLine("Scraper SerpApi:");
-            
-            var apiKey = await GetApiKeyFromVault();
+
+            var apiKey = await GetApiKeyFromEnvironmentVariable();
             var baseUrl = BuildBaseUrl(searchQuery, apiKey);
 
             var urlForYesterday = await GetUrlForYesterday(baseUrl);
@@ -32,7 +32,15 @@ namespace Extract
             }
 
             var allJobs = await FetchJobPages(urlForYesterday, apiKey);
-            return allJobs.Select(job => (object)job).ToList();
+            
+            var scrapedAt = DateTime.UtcNow.ToString("yyyy-MM-dd");
+
+            return allJobs.Select(job =>
+            {
+                job["scrapedAt"] = scrapedAt;
+                job["source"] = "serpapi.com";
+                return (object)job;
+            }).ToList();
         }
 
         private static async Task WriteJobsToJson(IEnumerable<object> allJobs)
@@ -58,20 +66,34 @@ namespace Extract
             Console.WriteLine($"Gemte {allJobs.Count()} jobopslag i {path}");
         }
         
-        private static async Task<string> GetApiKeyFromVault()
-        {
-            if (_apiKey != null) return _apiKey;
+        //private static async Task<string> GetApiKeyFromVault()
+        //{
+        //    if (_apiKey != null) return _apiKey;
 
-            var keyVaultUrl = "https://hillvault.vault.azure.net";
-            var secretName = "SerpApiKey";
+        //    var keyVaultUrl = "https://hillvault.vault.azure.net";
+        //    var secretName = "SerpApiKey";
 
-            var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
-            var secret = await client.GetSecretAsync(secretName);
+        //    var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
+        //    var secret = await client.GetSecretAsync(secretName);
 
-            _apiKey = secret.Value.Value;
-            return _apiKey;
-        }
+        //    _apiKey = secret.Value.Value;
+        //    return _apiKey;
+        //}
         
+        private static Task<string> GetApiKeyFromEnvironmentVariable()
+        {
+            if (_apiKey != null) return Task.FromResult(_apiKey);
+
+            _apiKey = Environment.GetEnvironmentVariable("SERP_API_KEY");
+
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                throw new InvalidOperationException("API-nøgle blev ikke fundet i miljøvariablerne.");
+            }
+
+            return Task.FromResult(_apiKey);
+        }
+
         private static string BuildBaseUrl(string searchQuery, string apiKey)
         {
             var serpApiUrl = "https://serpapi.com/search.json";

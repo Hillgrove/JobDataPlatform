@@ -135,7 +135,7 @@ namespace Extract
                     summaryUrl,
                     seeJobUrl,
                     isJobDescriptionOnJobindex,
-                    scrapedAt = DateTime.UtcNow.ToString("O"),
+                    scrapedAt = DateTime.UtcNow.ToString("yyyy-MM-dd"),
                     source = "jobindex.dk",
                 };
             }
