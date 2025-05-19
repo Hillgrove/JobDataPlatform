@@ -25,6 +25,7 @@ namespace Extract
             var allJobs = await ScrapeJobs();
             await WriteJobsToJson(allJobs);
         }
+
         private static async Task<List<object>?> ScrapeJobs()
         {
             Console.WriteLine("Scraper Jobindex:");
