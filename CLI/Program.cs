@@ -6,16 +6,13 @@ var searchQuery     = "software engineer OR udvikler OR programmør OR fullstack
 var sources         = new[] { "serpapi" };
 var date            = DateTime.UtcNow;
 
-//LocationParser.Load("data/postnumre.json");
-//ProgrammingLanguageParser.Load("data/programming_languages.json");
-
 // Extract data
-await Extraction.Run(searchQuery);
+//await Extraction.Run(searchQuery);
 
 // Upload til GCS
 await Upload.Run("data/raw", bucketName: "jobdata-pipeline", gcsPrefix: "raw");
 
 // Load JSON filer fra GCS til BigQuery
-await Load.Run(date, sources);
+//await Load.Run(date, sources);
 
 // Transform data
