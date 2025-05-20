@@ -10,7 +10,7 @@ namespace CLI
             var projectId           = "verdant-future-459722-k0";
             var datasetId           = "jobdata";
             var bucket              = "jobdata-pipeline";
-            var gcsKeyFilePath      = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Load", "Secrets", "gcs-key.json");
+            var gcsKeyFilePath      = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "DataTransfer", "Secrets", "gcs-key.json");
 
             var storage = await StorageClient.CreateAsync(Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(gcsKeyFilePath));
 
