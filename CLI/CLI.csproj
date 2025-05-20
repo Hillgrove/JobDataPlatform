@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DataTransfer\DataTransfer.csproj" />
     <ProjectReference Include="..\Extract\Extract.csproj" />
-    <ProjectReference Include="..\Load\DataTransfer.csproj" />
   </ItemGroup>
 
 </Project>
