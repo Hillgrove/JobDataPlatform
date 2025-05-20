@@ -21,7 +21,7 @@ jobs:
       - name: Dekod og gem GCP nøgle
         run: |
           mkdir -p Load/Secrets
-          echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > Load/Secrets/gcs-key.json
+          echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > DataTransfer/Secrets/gcs-key.json
 
       - name: Restore afhængigheder
         run: dotnet restore CLI/CLI.csproj
