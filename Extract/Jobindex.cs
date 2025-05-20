@@ -71,7 +71,7 @@ namespace Extract
             }
 
             Directory.CreateDirectory(OutputDir);
-            var filename = $"jobindex_results_{DateTime.Now:yyyy-MM-dd}.ndjson";
+            var filename = $"jobindex_results_{DateTime.UtcNow:yyyy-MM-dd}.ndjson";
             var path = Path.Combine(OutputDir, filename);
 
             await using var writer = File.CreateText(path);

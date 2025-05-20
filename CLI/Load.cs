@@ -1,0 +1,40 @@
+﻿using DataTransfer;
+using Google.Cloud.Storage.V1;
+
+namespace CLI
+{
+    public static class Load
+    {
+        public static async Task Run(DateTime date, string[] sources)
+        {
+            var projectId           = "verdant-future-459722-k0";
+            var datasetId           = "jobdata";
+            var bucket              = "jobdata-pipeline";
+            var gcsKeyFilePath      = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Load", "Secrets", "gcs-key.json");
+
+            var storage = await StorageClient.CreateAsync(Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(gcsKeyFilePath));
+
+            foreach (var source in sources)
+            {
+                string fileName     = $"{source}_results_{date:yyyy-MM-dd}.ndjson";
+                string gcsPath      = $"raw/{fileName}";
+                string gcsUri       = $"gs://{bucket}/{gcsPath}";
+                string tableId      = $"raw_{source}";
+
+                bool exists;
+                try { await storage.GetObjectAsync(bucket, gcsPath); exists = true; }
+                catch (Google.GoogleApiException e) when (e.HttpStatusCode == System.Net.HttpStatusCode.NotFound) { exists = false; }
+
+                if (exists)
+                {
+                    Console.WriteLine($"Loader {fileName} → BigQuery ({tableId})");
+                    await BigQueryLoader.LoadAsync(gcsUri, datasetId, tableId, projectId, gcsKeyFilePath);
+                }
+                else
+                {
+                    Console.WriteLine($"Fil ikke fundet i GCS: {fileName}");
+                }
+            }
+        }
+    }
+}

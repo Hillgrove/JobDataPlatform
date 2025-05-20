@@ -1,6 +1,6 @@
 ﻿using Google.Cloud.Storage.V1;
 
-namespace Load
+namespace DataTransfer
 {
     public class GcsUploader
     {

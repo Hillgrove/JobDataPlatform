@@ -37,6 +37,19 @@ namespace Extract
 
             return allJobs.Select(job =>
             {
+                if (job is JObject obj)
+                {
+                    if (obj["detected_extensions"] is JObject ext)
+                    {
+                        obj["detected_extensions_posted_at"] = ext["posted_at"];
+                        obj["detected_extensions_schedule_type"] = ext["schedule_type"];
+                        obj.Remove("detected_extensions");
+                    }
+
+                    obj.Property("thumbnail")?.Remove();
+                }
+
+                job["job_id"] = $"id_{job["job_id"]}";
                 job["scrapedAt"] = scrapedAt;
                 job["source"] = "serpapi.com";
                 return (object)job;
@@ -52,7 +65,7 @@ namespace Extract
             }
 
             Directory.CreateDirectory(OutputDir);
-            var filename = $"serpapi_results_{DateTime.Now:yyyy-MM-dd}.ndjson";
+            var filename = $"serpapi_results_{DateTime.UtcNow:yyyy-MM-dd}.ndjson";
             var path = Path.Combine(OutputDir, filename);
 
             await using var writer = File.CreateText(path);

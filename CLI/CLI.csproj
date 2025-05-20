@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Extract\Extract.csproj" />
-    <ProjectReference Include="..\Load\Load.csproj" />
+    <ProjectReference Include="..\Load\DataTransfer.csproj" />
   </ItemGroup>
 
 </Project>
