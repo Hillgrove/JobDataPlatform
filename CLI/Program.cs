@@ -1,5 +1,4 @@
 ﻿using CLI;
-using Extract;
 
 
 var searchQuery     = "software engineer OR udvikler OR programmør OR fullstack OR frontend OR backend OR web OR app OR database";
@@ -21,6 +20,6 @@ await Load.Run(date, sources);
 
 
 
-#region TroubleShooting
-//await SerpApiHistoricExtract.RunFullHistoricalScrape();
+#region Getting Historical Data
+//await Extraction.ExtractHistorialData();
 #endregion
