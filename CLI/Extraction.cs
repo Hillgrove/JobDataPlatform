@@ -11,5 +11,12 @@ namespace CLI
             await SerpApi.Extract(searchQuery);
             Console.WriteLine("Extraction færdig.\n");
         }
+
+        public static async Task ExtractHistorialData()
+        {
+            Console.WriteLine("Kører extraction af historiske data...");
+            await SerpApiHistoricExtract.RunFullHistoricalScrape();
+            Console.WriteLine("Extraction færdig.\n");
+        }
     }
 }
