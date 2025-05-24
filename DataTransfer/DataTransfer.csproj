@@ -11,4 +11,8 @@
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.13.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Secrets\" />
+  </ItemGroup>
+
 </Project>
