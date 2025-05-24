@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /Scrapers/Secrets/gcs-key.json
 /Load/Secrets/gcs-key.json
+/DataTransfer/Secrets/gcs-key.json
