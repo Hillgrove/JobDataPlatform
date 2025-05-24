@@ -18,9 +18,13 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Test base64
+        run: echo "${{ secrets.GCP_SA_KEY }}" | base64 -d | head
+
+
       - name: Dekod og gem GCP nøgle
         run: |
-          mkdir -p Load/Secrets
+          mkdir -p DataTransfer/Secrets
           echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > DataTransfer/Secrets/gcs-key.json
 
       - name: Restore afhængigheder
