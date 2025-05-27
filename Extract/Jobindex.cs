@@ -117,14 +117,6 @@ namespace Extract
 
                     var articleNode = fullDoc.DocumentNode.SelectSingleNode("//article[contains(@class,'jobtext-jobad')]");
                     fullDescriptionHtml = articleNode?.OuterHtml;
-
-                    // Saves the full job description to a file
-                    //if (!string.IsNullOrEmpty(seeJobUrl))
-                    //{
-                    //    var hash = HashUrl(seeJobUrl);
-                    //    var filePath = Path.Combine(PageDir, $"{hash}.html");
-                    //    File.WriteAllText(filePath, fullDescriptionHtml); 
-                    //}
                 }
 
                 return new
@@ -146,12 +138,6 @@ namespace Extract
                 Console.WriteLine($"Fejl ved behandling af job: {ex.Message}");
                 return null;
             }
-        }
-
-        private static object HashUrl(string url)
-        {
-            var hash = System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(url));
-            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant()[..12];
         }
     }
 }
