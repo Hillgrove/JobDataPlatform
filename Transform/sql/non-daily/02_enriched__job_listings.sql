@@ -7,7 +7,7 @@ PARTITION BY scraped_at AS
 
 WITH merged AS (
   -- Trin 1: ensret og saml data fra både Jobindex og SerpApi med samme struktur og kolonner
-  SELECT    
+  SELECT
     job_id,
 
     LOWER(title) AS title,
@@ -18,7 +18,7 @@ WITH merged AS (
       WHEN location IS NULL OR TRIM(location) = '' THEN 'unknown'
       ELSE LOWER(location)
     END AS location,
-    
+
     LOWER(scraped_from) AS scraped_from,
 
     DATE(scraped_at) AS scraped_at,
@@ -62,7 +62,7 @@ WITH merged AS (
       [REGEXP_EXTRACT(seeJobUrl, r"https?://([^/]+)")] AS job_details_domain,
       summaryUrl AS job_summary_url,
       seeJobUrl AS job_description_url
-      
+
     FROM jobdata.raw_jobindex
 
     UNION ALL
@@ -77,7 +77,7 @@ WITH merged AS (
       scrapedAt AS scraped_at,
       description,
       'google.com' AS job_listing_domain,
-      
+
       -- Udtræk alle unikke domæner fra links
       ARRAY(
       SELECT DISTINCT REGEXP_EXTRACT(link, r"https?://([^/]+)")
@@ -192,14 +192,14 @@ matched_languages AS (
   GROUP BY latest.job_id
 ),
 
--- frameworks
+-- web frameworks og teknologier
 matched_frameworks AS (
   SELECT
     latest.job_id,
-    ARRAY_AGG(DISTINCT frameworks.framework_name) AS frameworks
+    ARRAY_AGG(DISTINCT fw.framework_name) AS frameworks
   FROM latest
-  JOIN jobdata.frameworks
-    ON REGEXP_CONTAINS(latest.description, frameworks.pattern)
+  JOIN jobdata.web_frameworks_and_technologies AS fw
+    ON REGEXP_CONTAINS(latest.description, fw.pattern)
   GROUP BY latest.job_id
 ),
 
@@ -235,7 +235,7 @@ SELECT
 
   -- Marker om jobbet kan være fjernarbejde / remote
   CASE
-    WHEN title LIKE '%remote%' 
+    WHEN title LIKE '%remote%'
       OR location LIKE '%remote%'
       OR location LIKE '%mulighed for hjemmearbejde%'
       OR location LIKE '%work from home%'

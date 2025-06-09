@@ -8,6 +8,6 @@ SELECT LOWER(level_name) FROM jobdata.levels
 UNION DISTINCT
 SELECT LOWER(language_name) FROM jobdata.programming_languages
 UNION DISTINCT
-SELECT LOWER(framework_name) FROM jobdata.frameworks
+SELECT LOWER(framework_name) FROM jobdata.web_frameworks_and_technologies
 UNION DISTINCT
 SELECT LOWER(skill_name) FROM jobdata.skills;
