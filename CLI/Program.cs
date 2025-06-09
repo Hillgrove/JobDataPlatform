@@ -15,11 +15,11 @@ var client              = await BigQueryClient.CreateAsync(projectId, credential
 
 
 // Extract data
-//await Extraction.Run(searchQuery);
+await Extraction.Run(searchQuery);
 
 
 // Upload til GCS
-//await Upload.Run(credential, "data/raw", bucket, "raw");
+await Upload.Run(credential, "data/raw", bucket, "raw");
 
 // Load JSON filer fra GCS til BigQuery
 await Load.Run(client, date, sources, gcsKeyFilePath, bucket, datasetId, projectId);
