@@ -2,7 +2,6 @@ CREATE OR REPLACE TABLE jobdata.programming_languages AS
 SELECT * FROM UNNEST([
 
   -- Compiled languages
-  -- Compiled languages
   STRUCT('c#'           AS language_name, r'(?i)(^|[^a-z0-9])c#([^a-z0-9]|$)'                       AS pattern),
   STRUCT('c++'          AS language_name, r'(?i)(^|[^a-z0-9])c\+\+([^a-z0-9]|$)'                    AS pattern),
   STRUCT('f#'           AS language_name, r'(?i)(^|[^a-z0-9])f#([^a-z0-9]|$)'                       AS pattern),
