@@ -1,17 +1,20 @@
 ﻿using DataTransfer;
+using Google.Cloud.BigQuery.V2;
 using Google.Cloud.Storage.V1;
 
 namespace CLI
 {
     public static class Load
     {
-        public static async Task Run(DateTime date, string[] sources)
+        public static async Task Run(
+            BigQueryClient client,
+            DateTime date, 
+            string[] sources, 
+            string gcsKeyFilePath, 
+            string bucket, 
+            string datasetId, 
+            string projectId)
         {
-            var projectId           = "verdant-future-459722-k0";
-            var datasetId           = "jobdata";
-            var bucket              = "jobdata-pipeline";
-            var gcsKeyFilePath      = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "DataTransfer", "Secrets", "gcs-key.json");
-
             var storage = await StorageClient.CreateAsync(Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(gcsKeyFilePath));
 
             foreach (var source in sources)
@@ -28,7 +31,7 @@ namespace CLI
                 if (exists)
                 {
                     Console.WriteLine($"Loader {fileName} → BigQuery ({tableId})");
-                    await BigQueryLoader.LoadAsync(gcsUri, datasetId, tableId, projectId, gcsKeyFilePath);
+                    await BigQueryLoader.LoadAsync(client, gcsUri, datasetId, tableId, projectId, gcsKeyFilePath);
                 }
                 else
                 {

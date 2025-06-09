@@ -4,7 +4,7 @@ using Google.Cloud.BigQuery.V2;
 
 namespace Transform
 {
-    public class FullRefresh
+    public class FullTransform
     {
         
         private static readonly string _sqlDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Transform", "sql", "non-daily");

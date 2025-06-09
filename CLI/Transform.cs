@@ -18,7 +18,7 @@ namespace CLI
         public static async Task FullTransformation(BigQueryClient client, string projectId, string datasetId)
         {
             Console.WriteLine("Kører fuld transformation...");
-            await FullRefresh.RunAsync(client, projectId, datasetId);
+            await FullTransform.RunAsync(client, projectId, datasetId);
             Console.WriteLine("Fuld transformation færdig.\n");
         }
     }

@@ -5,17 +5,14 @@ namespace DataTransfer
     public static class BigQueryLoader
     {
         public static async Task LoadAsync(
+            BigQueryClient client,
             string gcsUri,
             string datasetId,
             string tableId,
             string projectId,
-            string gcsKeyFilePath,
             string partitionField = "scrapedAt",
             bool autodetect = true)
         {
-            var credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(gcsKeyFilePath);
-            var client = await BigQueryClient.CreateAsync(projectId, credential);
-
             // Destinationstabel i BigQuery
             var tableRef = client.GetTableReference(projectId, datasetId, tableId);
 
@@ -38,7 +35,7 @@ namespace DataTransfer
                 Console.WriteLine($"Job started: {job.Reference.JobId}");
 
                 // Vent på at jobbet er færdigt
-                job = job.PollUntilCompleted();
+                job = await job.PollUntilCompletedAsync();
 
                 if (job.Status.State != "DONE")
                 {
@@ -56,7 +53,10 @@ namespace DataTransfer
                     throw new Exception("BigQuery Job fejlede.");
                 }
 
-                Console.WriteLine($"BigQuery load job udført. Rækker indlæst: {job.Statistics.Load.OutputRows}");
+                if (job.Statistics?.Load != null)
+                    Console.WriteLine($"BigQuery load job udført. Rækker indlæst: {job.Statistics.Load.OutputRows}");
+                else
+                    Console.WriteLine("BigQuery load job færdigt – Ingen rækker indlæst.");
             }
 
             catch (Google.GoogleApiException ex)
