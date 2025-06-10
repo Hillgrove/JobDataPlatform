@@ -36,6 +36,6 @@ static string GetKeyFilePath()
 }
 
 #region Reset tools
-await Extraction.ExtractHistorialDataAsync();
-await Transformation.RunFullAsync(client, projectId, datasetId);
+//await Extraction.ExtractHistorialDataAsync();
+//await Transformation.RunFullAsync(client, projectId, datasetId);
 #endregion
