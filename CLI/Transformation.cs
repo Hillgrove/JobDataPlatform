@@ -1,17 +1,14 @@
-﻿using Extract;
-using Google.Cloud.BigQuery.V2;
+﻿using Google.Cloud.BigQuery.V2;
 using Transform;
 
 namespace CLI
 {
-    public class Transform
+    public static class Transformation
     {
         public static async Task Run(BigQueryClient client, string projectId, string datasetId)
         {
             Console.WriteLine("Kører daglig transformation...");
-
-            // Transform data
-            
+            await DailyTransform.RunAsync(client, projectId, datasetId);
             Console.WriteLine("Daglig transformation færdig.\n");
         }
 

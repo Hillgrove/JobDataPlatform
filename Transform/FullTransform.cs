@@ -1,12 +1,10 @@
-﻿
-using Google.Cloud.BigQuery.V2;
+﻿using Google.Cloud.BigQuery.V2;
 
 
 namespace Transform
 {
     public class FullTransform
-    {
-        
+    {        
         private static readonly string _sqlDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Transform", "sql", "non-daily");
 
         private static readonly string[] _files =
@@ -27,7 +25,7 @@ namespace Transform
             "03_dim__domains.sql",
             "03_dim__technologies.sql",
 
-            // lav godt navn
+            // RELATIONER – N:M-forbindelser mellem jobs og domæner/teknologier
             "04_rel__job_details_domains.sql",
             "04_rel__job_technologies.sql",
 
