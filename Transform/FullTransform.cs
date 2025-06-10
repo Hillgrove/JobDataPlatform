@@ -1,13 +1,10 @@
-﻿
-using Google.Cloud.BigQuery.V2;
+﻿using Google.Cloud.BigQuery.V2;
 
 
 namespace Transform
 {
-    public class FullRefresh
-    {
-        private static readonly string projectId = "verdant-future-459722-k0";
-        private static readonly string datasetId = "jobdata";
+    public class FullTransform
+    {        
         private static readonly string _sqlDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Transform", "sql", "non-daily");
 
         private static readonly string[] _files =
@@ -28,7 +25,7 @@ namespace Transform
             "03_dim__domains.sql",
             "03_dim__technologies.sql",
 
-            // lav godt navn
+            // RELATIONER – N:M-forbindelser mellem jobs og domæner/teknologier
             "04_rel__job_details_domains.sql",
             "04_rel__job_technologies.sql",
 
@@ -45,14 +42,8 @@ namespace Transform
             "07_rep__jobs_flattened.sql"
         ];
 
-        public static async Task RunAsync()
-        {
-            var gcsKeyFilePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "DataTransfer", "Secrets", "gcs-key.json");
-            if (!File.Exists(gcsKeyFilePath))
-                throw new FileNotFoundException($"Filen '{gcsKeyFilePath}' blev ikke fundet. Sørg for at placere nøglen korrekt.");
-
-            var credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(gcsKeyFilePath);
-            var client = await BigQueryClient.CreateAsync(projectId, credential);
+        public static async Task RunAsync(BigQueryClient client, string projectId, string datasetId)
+        {          
             var datasetRef = client.GetDatasetReference(projectId, datasetId);
 
             foreach (var file in _files)
@@ -66,8 +57,6 @@ namespace Transform
                 {
                     DefaultDataset = datasetRef
                 };
-
-                //await client.ExecuteQueryAsync(sql, parameters: null, queryOptions);
 
                 try
                 {
@@ -86,7 +75,6 @@ namespace Transform
                     }
                     throw;
                 }
-
 
                 Console.WriteLine($"Færdig med: {file}\n");
             }
