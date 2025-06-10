@@ -31,7 +31,7 @@ namespace CLI
                 if (exists)
                 {
                     Console.WriteLine($"Loader {fileName} → BigQuery ({tableId})");
-                    await BigQueryLoader.LoadAsync(client, gcsUri, datasetId, tableId, projectId, gcsKeyFilePath);
+                    await BigQueryLoader.LoadAsync(client, gcsUri, datasetId, tableId, projectId);
                 }
                 else
                 {
