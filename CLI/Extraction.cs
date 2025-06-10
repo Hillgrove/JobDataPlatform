@@ -4,7 +4,7 @@ namespace CLI
 {
     public static class Extraction
     {
-        public static async Task Run(string searchQuery)
+        public static async Task RunAsync(string searchQuery)
         {
             Console.WriteLine("Kører extraction...");
             await Jobindex.Extract();
@@ -12,7 +12,7 @@ namespace CLI
             Console.WriteLine("Extraction færdig.\n");
         }
 
-        public static async Task ExtractHistorialData()
+        public static async Task ExtractHistorialDataAsync()
         {
             Console.WriteLine("Kører extraction af historiske data...");
             await SerpApiHistoricExtract.RunFullHistoricalScrape();

@@ -6,7 +6,7 @@ namespace CLI
 {
     public static class Load
     {
-        public static async Task Run(
+        public static async Task RunAsync(
             BigQueryClient client,
             DateTime date, 
             string[] sources, 
