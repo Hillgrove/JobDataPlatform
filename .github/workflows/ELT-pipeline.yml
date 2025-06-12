@@ -1,8 +1,8 @@
 name: ELT Pipeline
 
 on:
-  schedule:
-    - cron: '46 0 * * *' # hver nat at 02:46 dansk tid
+  # schedule:
+  #   - cron: '46 0 * * *' # hver nat at 02:46 dansk tid
   workflow_dispatch:
 
 jobs:
