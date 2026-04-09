@@ -36,66 +36,11 @@ Rådataene berige med rolletyper, senioritetsniveauer, teknologier og kompetence
 
 Systemet er bygget op som en klassisk **ELT-pipeline** (Extract → Load → Transform) fordelt over fire C#-moduler:
 
-```mermaid
-flowchart LR
-    classDef source  fill:#F4A261,stroke:#E76F51,color:#fff
-    classDef stage   fill:#E9C46A,stroke:#d4a017,color:#333
-    classDef storage fill:#4895EF,stroke:#4361EE,color:#fff
-    classDef raw     fill:#90E0EF,stroke:#4895EF,color:#333
-    classDef enrich  fill:#52B788,stroke:#2D6A4F,color:#fff
-    classDef dimrel  fill:#9B5DE5,stroke:#7B2FBE,color:#fff
-    classDef fact    fill:#3A0CA3,stroke:#240046,color:#fff
-
-    subgraph SRC["Datakilder"]
-        A1["Jobindex.dk"]:::source
-        A2["Google Jobs"]:::source
-    end
-
-    B["NDJSON filer"]:::stage
-
-    subgraph GCP["Google Cloud"]
-        C["Cloud Storage"]:::storage
-        subgraph BQ["BigQuery"]
-            D["Raw"]:::raw
-            E["Enriched"]:::enrich
-            F["Dim + Rel"]:::dimrel
-            G["Fact + Views"]:::fact
-        end
-    end
-
-    A1 & A2 --> B --> C --> D --> E --> F --> G
-```
+![Pipeline](assets/pipeline.svg)
 
 BigQuery-tabellernes indbyrdes afhængigheder:
 
-```mermaid
-flowchart TD
-    classDef raw    fill:#90E0EF,stroke:#4895EF,color:#333
-    classDef ref    fill:#F4A261,stroke:#E76F51,color:#fff
-    classDef enrich fill:#52B788,stroke:#2D6A4F,color:#fff
-    classDef dim    fill:#4895EF,stroke:#4361EE,color:#fff
-    classDef rel    fill:#9B5DE5,stroke:#7B2FBE,color:#fff
-    classDef fact   fill:#3A0CA3,stroke:#240046,color:#fff
-    classDef rep    fill:#560BAD,stroke:#3A0CA3,color:#fff
-
-    R1["raw_jobindex"]:::raw
-    R2["raw_serpapi"]:::raw
-    REF["ref_* tabeller"]:::ref
-    E["enriched_job_listings"]:::enrich
-    D1["dim_companies"]:::dim
-    D2["dim_domains"]:::dim
-    D3["dim_technologies"]:::dim
-    RL1["rel_job_details_domains"]:::rel
-    RL2["rel_job_technologies"]:::rel
-    F["fct_jobs"]:::fact
-    V1["rep_jobs_exploded"]:::rep
-    V2["rep_jobs_flattened"]:::rep
-
-    R1 & R2 & REF --> E
-    E --> D1 & D2 & D3 & RL1 & RL2
-    D1 & D2 & D3 & RL1 & RL2 --> F
-    F --> V1 & V2
-```
+![Datamodel](assets/datamodel.svg)
 
 **Moduloversigt:**
 
